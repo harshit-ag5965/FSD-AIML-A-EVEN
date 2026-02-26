@@ -32,24 +32,45 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify(user));
     }
 
-    else if (url === "/createuser" && method === "POST") {
-      let body = "";
-    req.on("data", chunk => {
-      body += chunk;
-    })
-    req.on("end", () => {
-      const newuser = JSON.parse(body);
-      newuser.id = users.length+1;
-      users.push(newuser);
-      res.statusCode=201;
-      res.end(JSON.stringify({ message: "User created", data: newuser }));
-    });
 
+    else if(url.startsWith("/createuser") && method == "POST"){
+        let body = ""
+        req.on("data", (chunk)=>{
+            body+=chunk
+        })
+        req.on("end",()=>{
+            const dt = JSON.parse(body)
+            const newuser ={
+                id : Date.now(),
+                name: dt.name,
+                email: dt.email
+            }
+            users.push(newuser)
+            res.statusCode = 200
+            res.end("create user")
+        })
+        
     }
 
-    else if (url.startsWith("/users/") && method === "PUT") {
-    console.log("Edit User");
-    res.end("Edit User");
+
+    else if(url.startsWith("/users/") && method == "PUT"){
+        const id = url.split("/")[2];
+        const userIndex = users.findIndex(u=> u.id == id)
+        if(userIndex ==-1){
+            res.statusCode = 400
+            return res.end(`user ${id} not found`)
+        }
+        let body = ""
+        req.on("data",(chunk)=>{
+            body+=chunk
+        } )
+        req.on("end",()=>{
+            const data = JSON.parse(body)
+            users[userIndex] = {...users[userIndex], ...data};
+            console.log(`id ${id} update success`)
+            res.end(`id ${id} update success`)
+            
+        })
     }
 
     else if (url.startsWith("/users/") && method === "DELETE") {
